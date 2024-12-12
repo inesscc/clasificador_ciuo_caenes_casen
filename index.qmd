@@ -1,0 +1,298 @@
+---
+# title: "Mesa de Procesamiento REP"
+# author: "Febrero 2024"
+format:
+  revealjs:
+    auto-stretch: false
+    margin: 0
+    slide-number: true
+    scrollable: true
+    preview-links: auto
+    logo: imagenes/logo_portada2.png
+    css: ine_quarto_styles.css
+    view-distance: 50
+    # footer: <https://quarto.org>
+---
+
+```{r librerias}
+#| echo: FALSE
+#| output: FALSE
+#| eval: TRUE
+library(dplyr)
+library(targets)
+library(kableExtra)
+library(arrow)
+library(janitor)
+library(stringr)
+library(ggplot2)
+
+arrow::set_cpu_count(2)
+options(arrow.use_threads = TRUE)
+```
+
+#
+
+<!---
+# TODO: this does not work
+.linea-superior[]
+.linea-inferior[] 
+--->
+
+<!---
+# TODO: this does not work
+![](imagenes/logo_portada2.png){.center style="width: 20%;"}   
+--->
+
+[]{.linea-superior} 
+[]{.linea-inferior} 
+
+<!---
+<img src="imagenes/logo_portada2.png" style="width: 20%"/>  
+--->
+
+<img src="imagenes/logo_portada2.png" width="20%"/>  
+
+[**Modelo de Clasificación CIUO/CAENES**]{.big-par .center-justified}
+
+[**Resultados y capacitación**]{.big-par .center-justified}
+
+[**Diciembre 2024**]{.big-par .center-justified}
+
+## Introducción 
+
+::: {.incremental .medium-par}
+
+- Actualmente se lleva a cabo una supervisión de codificación manual de oficio y rama de actividad económica.
+
+- El objetivo de esta colaboración es permitir una adecuada focalización del esfuerzo de revisión de glosas codificadas manualmente, a partir del contraste con modelos de codificación basados en *machine learning*.
+
+- Esto permitirá **mejorar la calidad** de la codificación manual de glosas de CIUO 08 y CAENES en la encuesta Casen 2024, al permitir revisar y rectificar e incluso recuperar información en terreno.
+
+- Se probaron varias estrategias para dicho objetivo.
+
+:::
+
+## Estrategia
+
+::: {.incremental .medium-par}
+
+- **Modelos basados en LSTM con embeddings**:
+
+  - Se entrenaron **cuatro redes neuronales** utilizando datos de la **CASEN 2022**:
+    
+    - **CIUO_2d** y **CIUO_4d**
+    
+    - **CAENES_2d** y **CAENES_4d**
+    
+- Fine-tuning del modelo SABE:
+
+  - Ajustamos el modelo **SABE** (Sistema de Análisis de Bolsas de Empleo), desarrollado por SENCE y OTIC Sofofa.
+  
+  - **SABE** es una red neuronal tipo *transformer* basada en **BETO**.
+  
+  - Este modelo clasifica ofertas laborales en bolsas de empleo online a **4 dígitos** del CIUO08.CL.
+  
+:::
+
+::: notes
+
+"En esta etapa del proyecto, seguimos dos enfoques principales para abordar el problema de clasificación:
+
+Por un lado, construimos cuatro modelos de redes neuronales LSTM con capas de embeddings. Estos modelos, llamados CIUO_2d, CIUO_4d, CAENES_2d y CAENES_4d, fueron entrenados utilizando los datos de la encuesta CASEN 2022.
+Las redes neuronales LSTM (Long Short-Term Memory) son útiles para procesar secuencias, como oraciones. Esto es útil porque a veces el significado de una palabra depende de las palabras anteriores o las que vienen después.
+Los embeddings toman palabras y las convierten en números. Estos números capturan el significado de las palabras. Por ejemplo, "gato" y "perro" tendrán números parecidos porque son animales, pero "gato" y "mesa" serán diferentes porque no tienen tanto en común.
+
+Por otro lado, realizamos un fine-tuning del modelo SABE. Este modelo fue desarrollado por SENCE y OTIC Sofofa dentro del proyecto Sistema de Análisis de Bolsas de Empleo. Es una red neuronal basada en BETO, un modelo transformer que ha demostrado ser efectivo en tareas de procesamiento de lenguaje natural en español. SABE ya estaba entrenado para clasificar ofertas laborales en línea al nivel de 4 dígitos del CIUO08.CL, y nosotros lo ajustamos con los datos de la CASEN para que aprendiera las características específicas de los datos que estamos trabajando."
+
+:::
+
+
+## Resultados
+
+
+| Modelo    | Accuracy  | F1 Macro  |
+|-----------|-----------|-----------|
+| CIUO_2d   | 0,78      | 0,64      |
+| CIUO_4d   | 0,67      | 0,42      |
+| CAENES_2d | 0,83      | 0,63      |
+| CAENES_4d | 0,75      | 0,61      |
+
+| Modelo    | Accuracy  | F1 Macro  |
+|-----------|-----------|-----------|
+| SABE      | 0,68      | 0,41      |
+| SABE con *fine-tunning*      | 0,73      | 0,44      |
+
+
+::: notes
+- De los modelos basados en LSTM, podemos ver que CAENES_2d tiene el mejor desempeño general con un accuracy de 0,83 y un F1 Macro de 0,64
+
+- Para entender qué es el F1 Macro hay que entender primero qué es el F1. 
+
+- El F1-score es una medida que combina la precisión (precision) y la exhaustividad (recall) en un solo valor. Esto quiere decir que un F1 score alto indica un buen equilibrio entre precisión y recall, lo que significa que el modelo tiene un buen rendimiento tanto en evitar falsos positivos como en identificar verdaderos positivo
+
+- El F1-score es especialmente útil cuando hay un desbalance en las clases (por ejemplo, cuando hay muchas más muestras de una clase que de otra), ya que penaliza fuertemente las predicciones incorrectas.
+
+- El F1 Macro es el promedio del F1-score de todas las clases y es una métrica que sirvce para evaluar el rendimiento de un modelo de clasificación teniendo en cuenta el desempeño en cada clase de manera equilibrada. 
+
+- Los modelos de 2 dígitos (CIUO_2d y CAENES_2d) presentan mejores resultados en ambas métricas en comparación con sus contrapartes de 4 dígitos (CIUO_4d y CAENES_4d). Esto puede deberse a que la tarea de clasificación a 4 dígitos es más compleja. Sin embargo, al extraer las clases a dos dígitos a partir de las predicciones a 4 dígitos obtenemos rendimientos casi idénticos a las predicciones de los modelos a dos dígitos.
+
+- Como ya sabemos, los modelos SABE predicen CIUO a cuatro dígitos.
+
+- El modelo SABE sin ajustes tiene un accuracy de 0,68 y un F1 Macro de 0,41. Después de aplicar el fine-tuning, el accuracy mejora a 0,73 y el F1 Macro a 0,44. Esto muestra que el fine-tuning contribuyó a un mejor desempeño. 
+
+:::
+
+
+## Resultados
+
+| Modelo    | Accuracy  | F1 Macro  |
+|-----------|-----------|-----------|
+| CIUO_2d   | 0,78      | 0,64      |
+| CIUO_4d   | 0,67      | 0,42      |
+| CAENES_2d | 0,83      | 0,63      |
+| <span style="background-color: #FFD700;">CAENES_4d</span> | <span style="background-color: #FFD700;">0,75</span> | <span style="background-color: #FFD700;">0,61</span> |
+
+| Modelo    | Accuracy  | F1 Macro  |
+|-----------|-----------|-----------|
+| SABE      | 0,68      | 0,41      |
+| <span style="background-color: #FFD700;">SABE con *fine-tunning*</span> | <span style="background-color: #FFD700;">0,73</span> | <span style="background-color: #FFD700;">0,44</span> |
+
+::: notes
+- Los modelos finales, es decir, los que serán usados para realizar las predicciones serán la red neuronal LSTM para CAENES a 4 dígitos y SABE con fine-tunning para CIUO a 4 dígitos dado que el objetivo es supervisar a este nivel de desagregación.
+
+- Sin embargo, más adelante mostraremos una propuesta de cómo usar estos modelos.
+
+:::
+
+## Resultados 
+
+::: {.panel-tabset .small-par}
+
+### CAENES
+
+<iframe src="imagenes/caenes_hist_f1_4d.html" width="90%" height="600" ></iframe>
+
+### CIUO
+
+<iframe src="imagenes/ciuo_hist_f1_sabe_4d.html" width="90%" height="600" frameborder="0"></iframe>
+
+::: 
+
+::: notes
+
+- En estos gráficos observamos la distribución del F1 score para el modelo a 4 dígitos de CAENES y de CIUO
+
+- Cómo se mencionó al principio el modelo de CAENES obtuvo mejores métricas, tanto en su accuracy como en el F1 macro y esto lo podemos observar en el gráfico donde hay una baja densidad de clases con un F1 score bajo
+
+- Sin embargo, el modelo SABE con fine-tunning para CIUO, si bien tuvo un accuracy del 0,73%, el F1 macro fue más bajo, llegando a un 0,44. Esto se puede observar en el gráfico donde hay una mayor densidad de clases con un F1 score bajo. Esto se debe a que hay clases pequeñas en CIUO a 4 dígitos que no se están logrando predecir bien.
+
+:::
+
+## Resultados 
+
+<iframe src="imagenes/hist_numero_ejemplos.html" width="90%" height="600" frameborder="0"></iframe>
+
+
+## Propuesta: CAENES
+
+<iframe src="imagenes/ventiles_caenes_4d.html" width="90%" height="600" frameborder="0"></iframe>
+
+::: notes
+-	El modelo de redes neuronales nos entrega una probabilidad y esa probabilidad representa la confianza del modelo en que un registro o una entrada pertenece a una clase particular.
+-	Entonces, van a existir registros sobre los cuales la red va a estar muy segura (por ejemplo, con probabilidades sobre el 80%) y otras en las que no lo va a estar tanto.
+-	Lo que nosotros hicimos fue tomar las predicciones del modelo CANES y CIUO a 4 dígitos y ordenar esas probabilidades de menor a mayor y luego dividir la base en ventiles según estas probabilidades.
+-	El gráfico muestra en el eje x los ventiles ordenados del 1 al 20, donde cada ventil representa un grupo del 5% de los datos ordenados por la probabilidad predicha por el modelo.
+-	El eje y muestra la precisión acumulada para los ventiles correspondientes. Es decir, que el último valor en el gráfico representa la precisión del modelo en el ventil 20 (es decir en el 5% de los datos con mejores probabilidades), y el siguiente valor incluye la precisión de los ventiles 20 y 19 (es decir el 10% de los datos con mejores probabilidades), y así sucesivamente, hasta el último valor que incluye la precisión acumulada de todos los ventiles (del 20 al 1).
+-	En el gráfico, se observa que el accuracy es bastante alto y se mantiene estable cerca de 1.0 (100%) en los ventiles superiores (20 a 15), lo que indica que el modelo es muy preciso para las predicciones con probabilidades más altas.
+-	A medida que se incluyen más ventiles con probabilidades más bajas, el accuracy acumulado comienza a disminuir gradualmente. Esto sugiere que el modelo es menos preciso para las predicciones con probabilidades más bajas.
+-	La línea roja nos indica un accuracy del 85% el cual fue elegido pensando en que sería un valor aceptable. Acá podemos ver que hasta el ventil 6, es decir, el 70% de los datos con mejores probabilidades, el accuracy se mantiene sobre el 85%.
+-	A raíz de estos resultados, nuestra propuesta, sería usar el modelo a 4 dígitos y quedarse solamente con el 70% de los datos con mejores probabilidades para hacer la supervisión.
+
+:::
+
+## Propuesta: CIUO
+
+<iframe src="imagenes/ventiles_ciuo_4d_sabe.html" width="90%" height="600" frameborder="0"></iframe>
+
+::: notes
+
+- Para el caso de la CIUO a 4 dígitos observamos que hasta el ventil 7, es decir, el 65% de los datos con mejores probabilidades, el accuracy se mantiene sobre el 85%. Por lo que nuestra propuesta es revisar las predicciones hasta dicho ventil.
+
+:::
+
+## Capacitación
+
+::: {.incremental .medium-par}
+
+- El repositorio que contiene el flujo implementado para entrenar el modelo se encuentra en el siguiente link: 
+
+- Para clonar el repositorio no es necesario tener una cuenta gitlab.
+
+- El usuario puede usar “Símbolo del sistema” o también una terminal desde VSC para clonar el repositorio.
+
+- Usando el siguiente comando se creará un directorio local llamado *clasificador_ciuo_caenes_casen*, que es el directorio raíz del repositorio:
+
+``` console                                                  
+git clone http://gitlabsdti.ine.cl/sdt/ciencia-de-datos/colaboracion-mdsf/clasificador_ciuo_caenes_casen.git
+
+```   
+:::
+
+## Capacitación
+
+::: {.incremental .medium-par}
+
+- Una vez instalado el repositorio lo debemos abrir en VSC de la siguiente manera: File -> Open Folder… -> Seleccionar archivo *clasificador_ciuo_caenes_casen*
+
+- Luego abrir una terminal Command Prompt (cmd)
+
+- Crear el ambiente virtual y activarlo usando los siguientes comandos:
+
+``` console                                                  
+pip install virtualenv
+
+virtualenv venv
+
+venv\Scripts\activate 
+``` 
+
+- Una vez creado el ambiente virttual no es necesario volver a crearlo pero siempre será necesario activarlo con:
+
+``` console  
+venv\Scripts\activate 
+``` 
+:::
+
+## Capacitación
+
+::: {.incremental .medium-par}
+
+- Teniendo el ambiente activado podemos instalar las dependencias necesarias en el ambiente usando el siguiente código:
+
+``` console  
+pip install -r requirements.txt
+``` 
+- Este paso puede demorar un poco
+
+- Se realiza solo una vez
+
+:::
+
+## Capacitación
+
+- Las bases, los modelos y artefactos para correr el flujo se encuentran en el siguiente link: 
+
+- La carpeta comprimida tiene la misma estructura del repositorio, por lo que basta con descomprimirla y copiar los archivos desde cada una de sus subcarpetas al directorio con el mismo nombre en el repositorio que ha sido clonado.
+
+## Capacitación
+
+- Para correr los scripts hay que escribir en la terminal
+
+``` console  
+cd code
+``` 
+
+- Luego los modelos se pueden correr
+
+
+
