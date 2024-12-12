@@ -61,6 +61,8 @@ def load_data():
     data['glosa_tareas'] = data['glosa_tareas'].map(lambda x: process_glosa(x) if pd.notna(x) else "")
     data['activ_principal'] = data['activ_principal'].map(lambda x: process_glosa(x) if pd.notna(x) else "")
     
+    data = data.reset_index(drop = True)
+    
     return data
 
 def predict_with_model(model_name, data):
