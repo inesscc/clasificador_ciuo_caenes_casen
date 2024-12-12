@@ -150,12 +150,10 @@ def predict_with_model(model_name, data):
 
     # Asignar valores NaN a las columnas de predicción para las filas que cumplan la condición
     results.loc[mask, [f'predicted_class_{model_name}', f'predicted_probability_{model_name}']] = np.nan
-    results = results.reset_index(drop = True)
 
     # Asignar las predicciones a las filas que no cumplan la condición
     results.loc[~mask, f'predicted_class_{model_name}'] = y_pred_class
     results.loc[~mask, f'predicted_probability_{model_name}'] = y_pred_probabilities
-
     
     # Calcular los ventiles para las probabilidades predichas
     results[f'predicted_probability_ventile_{model_name}'] = pd.qcut(results[f'predicted_probability_{model_name}'], q=20, labels=False, duplicates='drop') + 1
