@@ -225,43 +225,69 @@ Por otro lado, realizamos un fine-tuning del modelo SABE. Este modelo fue desarr
 ::: {.incremental .medium-par}
 
 - El repositorio que contiene el flujo implementado para entrenar el modelo se encuentra en el siguiente link: 
+<https://github.com/inesscc/clasificador_ciuo_caenes_casen>
 
-- Para clonar el repositorio no es necesario tener una cuenta gitlab.
+- Para clonar el repositorio no es necesario tener una cuenta gitlab o github.
 
 - El usuario puede usar “Símbolo del sistema” o también una terminal desde VSC para clonar el repositorio.
 
 - Usando el siguiente comando se creará un directorio local llamado *clasificador_ciuo_caenes_casen*, que es el directorio raíz del repositorio:
 
-``` console                                                  
-git clone http://gitlabsdti.ine.cl/sdt/ciencia-de-datos/colaboracion-mdsf/clasificador_ciuo_caenes_casen.git
-
-```   
 :::
+
+. . .
+
+``` console                                                  
+git clone https://github.com/inesscc/clasificador_ciuo_caenes_casen.git
+```   
 
 ## Capacitación
 
 ::: {.incremental .medium-par}
 
-- Una vez instalado el repositorio lo debemos abrir en VSC de la siguiente manera: File -> Open Folder… -> Seleccionar archivo *clasificador_ciuo_caenes_casen*
+- Una vez instalado el repositorio, lo debemos abrir en VSC de la siguiente manera: File -> Open Folder… -> Seleccionar archivo *clasificador_ciuo_caenes_casen*
 
-- Luego abrir una terminal Command Prompt (cmd)
+- Luego abrir una **terminal Command Prompt (cmd)**
 
-- Crear el ambiente virtual y activarlo usando los siguientes comandos:
+- Crear un ambiente virtual y activarlo usando los siguientes comandos:
+
+:::
+
+. . . 
 
 ``` console                                                  
 pip install virtualenv
-
+``` 
+``` console 
 virtualenv venv
-
+```
+``` console 
 venv\Scripts\activate 
 ``` 
 
+::: {.incremental .medium-par}
+
 - Una vez creado el ambiente virttual no es necesario volver a crearlo pero siempre será necesario activarlo con:
+
+:::
+
+. . . 
 
 ``` console  
 venv\Scripts\activate 
 ``` 
+
+::: {.incremental .medium-par}
+
+- Sabremos que está activado si aparece *(venv)* en el directorio que muestra la terminal, como en el siguiente ejemplo:
+
 :::
+
+. . . 
+
+``` console  
+(venv) C:\Users\lcgallardov\Documents\PCD\clasificador_ciuo_caenes_casen_v2>
+``` 
 
 ## Capacitación
 
@@ -269,30 +295,81 @@ venv\Scripts\activate
 
 - Teniendo el ambiente activado podemos instalar las dependencias necesarias en el ambiente usando el siguiente código:
 
+:::
+
+. . . 
+
 ``` console  
 pip install -r requirements.txt
 ``` 
-- Este paso puede demorar un poco
 
-- Se realiza solo una vez
+::: {.incremental .medium-par}
+
+- Este paso puede demorar un poco pero se realiza solo una vez
+
+- Las bases, los modelos y artefactos para correr el flujo se encuentran en el siguiente [link](hhttps://inechile-my.sharepoint.com/:f:/g/personal/lcgallardov_ine_gob_cl/ErGsuAm161VBkfEGeOZdbr8BRLPdnhXpxAs9G_yhyj9y7w)
+
+- La carpeta comprimida tiene la misma estructura del repositorio, por lo que basta con descomprimirla y copiar los archivos desde cada una de sus subcarpetas al directorio con el mismo nombre en el repositorio que ha sido clonado.
 
 :::
 
 ## Capacitación
 
-- Las bases, los modelos y artefactos para correr el flujo se encuentran en el siguiente link: 
+::: {.incremental .medium-par}
 
-- La carpeta comprimida tiene la misma estructura del repositorio, por lo que basta con descomprimirla y copiar los archivos desde cada una de sus subcarpetas al directorio con el mismo nombre en el repositorio que ha sido clonado.
+- Para correr los scripts hay que escribir en la terminal:
 
-## Capacitación
+:::
 
-- Para correr los scripts hay que escribir en la terminal
+. . . 
 
 ``` console  
 cd code
 ``` 
 
-- Luego los modelos se pueden correr
+::: {.incremental .medium-par}
 
+- Luego, para correr el script que entrega las **predicciones de CAENES a 4 dígitos** hay que escribir en la terminal:
+
+:::
+
+. . . 
+
+``` console  
+python 6_run_model_prediction.py CAENES_4d
+``` 
+
+::: {.incremental .medium-par}
+
+- Para las **predicciones de CIUO a 4 dígitos**:
+
+:::
+
+. . . 
+
+``` console  
+python 6_run_model_prediction.py CIUO_4d
+``` 
+
+::: {.incremental .medium-par}
+
+- El *output* serán dos archvios excel llamados *predicciones_CASEN_4d.xlsx* y *predicciones_CIUO_4d.xlsx*. Dichos archivos se encuentran en *data/output/bases_prediccion_casen/*.
+
+:::
+
+## Capacitación
+
+::: {.incremental .medium-par}
+- Para este demo se usó una muestra del 5% de los datos de CASEN 2022.
+
+- Los datos nuevos que serán usados para predecir deben ir en *data/input/* en formato *.dta* y deben contener las columnas **folio**, **id_persona**, **oficio4_08**, **rama4**, **o9a**, **o9b** y **o24**.
+
+- Para poder correr los modelos usando las bases nuevas brutas de CASEN 2024, el usuario deberá especificar el archivo de entrada en el script `6_run_model_prediction.py` de la siguiente forma:
+
+:::
+
+. . . 
+
+![](imagenes/script_6.png){.lightbox}
 
 
